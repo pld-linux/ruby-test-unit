@@ -7,21 +7,18 @@
 %define pkgname test-unit
 Summary:	Improved version of Test::Unit bundled in Ruby 1.8.x
 Name:		ruby-%{pkgname}
-Version:	2.1.2
-Release:	0.1
+Version:	2.5.4
+Release:	1
 Group:		Development/Languages
 # lib/test/unit/diff.rb is under GPLv2 or Ruby or Python
 # lib/test-unit.rb is under LGPLv2+ or Ruby
 # Other file: GPLv2 or Ruby
 License:	(GPL v2 or Ruby) and (GPL v2 or Ruby or Python) and (LGPL v2+ or Ruby)
 Source0:	http://rubygems.org/gems/%{pkgname}-%{version}.gem
-# Source0-md5:	fbe74832c21be380098569a99f75858d
+# Source0-md5:	af76916d97034e9f4f8936ab1dc90b8f
 URL:		http://rubyforge.org/projects/test-unit/
 BuildRequires:	rpm-rubyprov
 BuildRequires:	rpmbuild(macros) >= 1.656
-%if %(locale -a | grep -q '^en_US$'; echo $?)
-BuildRequires:	glibc-localedb-all
-%endif
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -58,21 +55,9 @@ Dokumentacji w formacie ri dla %{pkgname}.
 %prep
 %setup -q -n %{pkgname}-%{version}
 
-# missing file (test_case4.rb) from test
-#./test/collector/test-load.rb:69:    @sub_test_case4 = @sub_test_dir + "test_case4.rb"
-%{__rm} test/collector/test-load.rb
-
-#test_escaped?(TestUnitPriority):
-#NoMethodError: undefined method `tmpdir' for Dir:Class
-#    test-unit-2.1.2/test/test-priority.rb:115:in `assert_escaped_name'
-#    test-unit-2.1.2/test/test-priority.rb:108:in `test_escaped?'
-%{__rm} test/test-priority.rb
-
 %build
 %if %{with tests}
 #rake test --trace
-# UTF8 locale needed for tests to pass
-LC_ALL=en_US.UTF-8 \
 ruby -Ilib ./test/run-test.rb
 %endif
 
@@ -81,11 +66,12 @@ rdoc --op rdoc lib
 # rm -r ri/NOT_THIS_MODULE_RELATED_DIRS
 rm ri/created.rid
 rm ri/cache.ri
+rm -r ri/Object
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT{%{ruby_rubylibdir},%{ruby_ridir},%{ruby_rdocdir}/%{name}-%{version}}
-cp -a lib/* $RPM_BUILD_ROOT%{ruby_rubylibdir}
+install -d $RPM_BUILD_ROOT{%{ruby_vendorlibdir},%{ruby_ridir},%{ruby_rdocdir}/%{name}-%{version}}
+cp -a lib/* $RPM_BUILD_ROOT%{ruby_vendorlibdir}
 cp -a ri/* $RPM_BUILD_ROOT%{ruby_ridir}
 cp -a rdoc/* $RPM_BUILD_ROOT%{ruby_rdocdir}/%{name}-%{version}
 
@@ -94,8 +80,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc History.txt README.txt
-%{ruby_rubylibdir}/test
+%doc README.textile TODO
+%{ruby_vendorlibdir}/test
+%{ruby_vendorlibdir}/test-unit.rb
 
 %files rdoc
 %defattr(644,root,root,755)
