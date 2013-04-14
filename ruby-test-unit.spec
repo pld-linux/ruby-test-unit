@@ -1,28 +1,35 @@
 # TODO
 # - any policy what to package in %{ruby_ridir}?
 #
+# Conditional build:
+%bcond_without	tests		# build without tests
+
 %define pkgname test-unit
-Summary:	-
+Summary:	Improved version of Test::Unit bundled in Ruby 1.8.x
 Name:		ruby-%{pkgname}
 Version:	2.1.2
 Release:	0.1
-License:	Ruby License
-Source0:	http://rubygems.org/downloads/%{pkgname}-%{version}.gem
-# Source0-md5:	fbe74832c21be380098569a99f75858d
 Group:		Development/Languages
+# lib/test/unit/diff.rb is under GPLv2 or Ruby or Python
+# lib/test-unit.rb is under LGPLv2+ or Ruby
+# Other file: GPLv2 or Ruby
+License:	(GPL v2 or Ruby) and (GPL v2 or Ruby or Python) and (LGPL v2+ or Ruby)
+Source0:	http://rubygems.org/gems/%{pkgname}-%{version}.gem
+# Source0-md5:	fbe74832c21be380098569a99f75858d
 URL:		http://rubyforge.org/projects/test-unit/
-BuildRequires:	rpmbuild(macros) >= 1.484
-BuildRequires:	ruby >= 1:1.8.6
-BuildRequires:	ruby-modules
-%{?ruby_mod_ver_requires_eq}
-#BuildArch:	noarch
+BuildRequires:	rpm-rubyprov
+BuildRequires:	rpmbuild(macros) >= 1.656
+%if %(locale -a | grep -q '^en_US$'; echo $?)
+BuildRequires:	glibc-localedb-all
+%endif
+BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
-# nothing to be placed there. we're not noarch only because of ruby packaging
-%define		_enable_debug_packages	0
-
 %description
-...
+Test::Unit 2.x - Improved version of Test::Unit bundled in Ruby 1.8.x.
+Ruby 1.9.x bundles minitest not Test::Unit. Test::Unit bundled in Ruby
+1.8.x had not been improved but unbundled Test::Unit (Test::Unit 2.x)
+will be improved actively.
 
 %package rdoc
 Summary:	HTML documentation for %{pkgname}
@@ -49,26 +56,38 @@ ri documentation for %{pkgname}.
 Dokumentacji w formacie ri dla %{pkgname}.
 
 %prep
-%setup -q -c
-# gem install
-%{__tar} xf %{SOURCE0} -O data.tar.gz | %{__tar} xz
-find -newer README.txt -o -print | xargs touch --reference %{SOURCE0}
+%setup -q -n %{pkgname}-%{version}
 
-# cleanup backups after patching
-find '(' -name '*~' -o -name '*.orig' ')' -print0 | xargs -0 -r -l512 rm -f
+# missing file (test_case4.rb) from test
+#./test/collector/test-load.rb:69:    @sub_test_case4 = @sub_test_dir + "test_case4.rb"
+%{__rm} test/collector/test-load.rb
+
+#test_escaped?(TestUnitPriority):
+#NoMethodError: undefined method `tmpdir' for Dir:Class
+#    test-unit-2.1.2/test/test-priority.rb:115:in `assert_escaped_name'
+#    test-unit-2.1.2/test/test-priority.rb:108:in `test_escaped?'
+%{__rm} test/test-priority.rb
 
 %build
+%if %{with tests}
+#rake test --trace
+# UTF8 locale needed for tests to pass
+LC_ALL=en_US.UTF-8 \
+ruby -Ilib ./test/run-test.rb
+%endif
+
 rdoc --ri --op ri lib
 rdoc --op rdoc lib
 # rm -r ri/NOT_THIS_MODULE_RELATED_DIRS
 rm ri/created.rid
+rm ri/cache.ri
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT{%{ruby_rubylibdir},%{ruby_ridir},%{ruby_rdocdir}}
+install -d $RPM_BUILD_ROOT{%{ruby_rubylibdir},%{ruby_ridir},%{ruby_rdocdir}/%{name}-%{version}}
 cp -a lib/* $RPM_BUILD_ROOT%{ruby_rubylibdir}
 cp -a ri/* $RPM_BUILD_ROOT%{ruby_ridir}
-cp -a rdoc $RPM_BUILD_ROOT%{ruby_rdocdir}/%{name}-%{version}
+cp -a rdoc/* $RPM_BUILD_ROOT%{ruby_rdocdir}/%{name}-%{version}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
