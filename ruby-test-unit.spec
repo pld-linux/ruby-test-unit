@@ -1,5 +1,3 @@
-# TODO
-# - any policy what to package in %{ruby_ridir}?
 #
 # Conditional build:
 %bcond_without	tests		# build without tests
@@ -8,7 +6,7 @@
 Summary:	Improved version of Test::Unit bundled in Ruby 1.8.x
 Name:		ruby-%{pkgname}
 Version:	2.5.4
-Release:	1
+Release:	2
 Group:		Development/Languages
 # lib/test/unit/diff.rb is under GPLv2 or Ruby or Python
 # lib/test-unit.rb is under LGPLv2+ or Ruby
@@ -18,7 +16,7 @@ Source0:	http://rubygems.org/gems/%{pkgname}-%{version}.gem
 # Source0-md5:	af76916d97034e9f4f8936ab1dc90b8f
 URL:		http://rubyforge.org/projects/test-unit/
 BuildRequires:	rpm-rubyprov
-BuildRequires:	rpmbuild(macros) >= 1.656
+BuildRequires:	rpmbuild(macros) >= 1.665
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -56,6 +54,9 @@ Dokumentacji w formacie ri dla %{pkgname}.
 %setup -q -n %{pkgname}-%{version}
 
 %build
+# write .gemspec
+%__gem_helper spec
+
 %if %{with tests}
 #rake test --trace
 ruby -Ilib ./test/run-test.rb
@@ -70,10 +71,11 @@ rm -r ri/Object
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT{%{ruby_vendorlibdir},%{ruby_ridir},%{ruby_rdocdir}/%{name}-%{version}}
+install -d $RPM_BUILD_ROOT{%{ruby_vendorlibdir},%{ruby_specdir},%{ruby_ridir},%{ruby_rdocdir}/%{name}-%{version}}
 cp -a lib/* $RPM_BUILD_ROOT%{ruby_vendorlibdir}
 cp -a ri/* $RPM_BUILD_ROOT%{ruby_ridir}
 cp -a rdoc/* $RPM_BUILD_ROOT%{ruby_rdocdir}/%{name}-%{version}
+cp -p %{pkgname}-%{version}.gemspec $RPM_BUILD_ROOT%{ruby_specdir}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -83,6 +85,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc README.textile TODO
 %{ruby_vendorlibdir}/test
 %{ruby_vendorlibdir}/test-unit.rb
+%{ruby_specdir}/%{pkgname}-%{version}.gemspec
 
 %files rdoc
 %defattr(644,root,root,755)
