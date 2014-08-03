@@ -5,23 +5,31 @@
 %define pkgname test-unit
 Summary:	Improved version of Test::Unit bundled in Ruby 1.8.x
 Name:		ruby-%{pkgname}
-Version:	2.5.4
-Release:	2
+Version:	2.5.5
+Release:	1
 Group:		Development/Languages
 # lib/test/unit/diff.rb is under GPLv2 or Ruby or Python
 # lib/test-unit.rb is under LGPLv2+ or Ruby
 # Other file: GPLv2 or Ruby
 License:	(GPL v2 or Ruby) and (GPL v2 or Ruby or Python) and (LGPL v2+ or Ruby)
 Source0:	http://rubygems.org/gems/%{pkgname}-%{version}.gem
-# Source0-md5:	af76916d97034e9f4f8936ab1dc90b8f
+# Source0-md5:	330ec9fb1cb03f869bbb20274672e297
 URL:		http://rubyforge.org/projects/test-unit/
 BuildRequires:	rpm-rubyprov
 BuildRequires:	rpmbuild(macros) >= 1.665
+%if %{with tests}
+#BuildRequires:	ruby-RedCloth 
+BuildRequires:	ruby-bundler 
+#BuildRequires:	ruby-packnga 
+BuildRequires:	ruby-rake 
+#BuildRequires:	ruby-yard 
+%endif
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
 Test::Unit 2.x - Improved version of Test::Unit bundled in Ruby 1.8.x.
+
 Ruby 1.9.x bundles minitest not Test::Unit. Test::Unit bundled in Ruby
 1.8.x had not been improved but unbundled Test::Unit (Test::Unit 2.x)
 will be improved actively.
@@ -64,7 +72,6 @@ ruby -Ilib ./test/run-test.rb
 
 rdoc --ri --op ri lib
 rdoc --op rdoc lib
-# rm -r ri/NOT_THIS_MODULE_RELATED_DIRS
 rm ri/created.rid
 rm ri/cache.ri
 rm -r ri/Object
